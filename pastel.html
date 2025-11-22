@@ -131,8 +131,19 @@
         scene.fog = new THREE.FogExp2(0x2b1810, 0.025);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 14, 26);
-        camera.lookAt(0, 2, 0);
+        
+        // Función para ajustar la cámara según el dispositivo
+        function updateCameraPosition() {
+            if (window.innerWidth < 768) {
+                // Móvil: Alejar la cámara y subirla un poco más para que quepa todo
+                camera.position.set(0, 16, 38);
+            } else {
+                // Escritorio
+                camera.position.set(0, 14, 26);
+            }
+            camera.lookAt(0, 2, 0);
+        }
+        updateCameraPosition();
 
         const renderer = new THREE.WebGLRenderer({ canvas: canvasElement, alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -349,6 +360,7 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            updateCameraPosition();
         });
 
     </script>

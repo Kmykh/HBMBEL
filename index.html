@@ -144,6 +144,31 @@
         }
         .envelope-container.open + .click-text { opacity: 0; }
 
+        /* --- RESPONSIVE DESIGN --- */
+        @media (max-width: 768px) {
+            .title {
+                font-size: clamp(1.5rem, 8vw, 2.5rem);
+                margin-bottom: 30px;
+            }
+            .envelope-container {
+                transform: scale(0.8);
+            }
+            .envelope-container.open {
+                transform: translateY(30px) scale(0.8);
+            }
+            /* Ajustar posición de las hojas para que no tapen el sobre en móviles */
+            .leaf.left { bottom: 20%; left: -40px; }
+            .leaf.right { bottom: 35%; right: -40px; }
+            
+            /* Escalar el jardín para que no ocupe tanto espacio vertical pero llenando el ancho */
+            #garden-container {
+                transform: scale(0.75);
+                transform-origin: bottom center;
+                width: 134%; /* Compensar la reducción de escala (1 / 0.75 ≈ 1.33) */
+                left: -17%;  /* Centrar el contenedor expandido */
+            }
+        }
+
         @keyframes sway { from { transform: rotate(2deg); } to { transform: rotate(-2deg); } }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }

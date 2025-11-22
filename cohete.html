@@ -30,11 +30,13 @@
             position: absolute; top: 15%; width: 100%; text-align: center;
             color: #ffffff; /* Blanco uniforme */
             font-family: 'Playfair Display', serif; font-style: italic;
-            font-size: 2rem; 
+            font-size: clamp(1.2rem, 5vw, 2rem); 
             letter-spacing: 2px;
             text-shadow: 0 0 15px rgba(255, 255, 255, 0.6); /* Resplandor suave */
             z-index: 10; pointer-events: none;
             transition: opacity 0.8s ease-in-out;
+            padding: 0 20px; /* Margen lateral para móviles */
+            box-sizing: border-box;
         }
 
         /* CORTINA FINAL */
@@ -64,7 +66,15 @@
         scene.fog = new THREE.FogExp2(0x000000, 0.002);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
-        camera.position.set(0, 0, 25); // Cámara de frente
+        
+        function updateCameraPosition() {
+            if (window.innerWidth < 768) {
+                camera.position.set(0, 0, 35); // Más lejos en móvil
+            } else {
+                camera.position.set(0, 0, 25);
+            }
+        }
+        updateCameraPosition();
 
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -256,6 +266,7 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            updateCameraPosition();
         });
     </script>
 </body>
