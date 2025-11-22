@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Mabel 💌</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=Playfair+Display:ital,wght@1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        /* --- CONFIGURACIÓN BASE Y FONDO DE ATARDECER PURO --- */
+        body {
+            margin: 0;
+            overflow: hidden;
+            /* FONDO DE ATARDECER PURO E INTENSO:
+               Colores más ricos, cálidos y dramáticos.
+            */
+        background: linear-gradient(
+            to bottom,
+            #FFD1DC 0%,   /* Rosa pastel */
+            #FFB6C1 20%,  /* Rosa claro */
+            #FF9999 40%,  /* Rosa salmón */
+            #FF7F50 65%,  /* Coral */
+            #FFA500 85%,  /* Naranja */
+            #FFCC33 100%  /* Amarillo cálido */
+        );
+            font-family: 'Montserrat', sans-serif;
+            height: 100vh;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+        }
+
+        /* --- JARDÍN DE LIRIOS (SIN CAMBIOS ESTRUCTURALES) --- */
+        #garden-container {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 5; overflow: hidden;
+        }
+
+        .lily-wrapper {
+            position: absolute;
+            transform-origin: bottom center;
+            animation: sway 5s infinite ease-in-out alternate;
+        }
+
+        /* Estilos de la flor */
+        .stem {
+            position: absolute; bottom: 0; left: 50%; width: 4px; height: 100%;
+            background: linear-gradient(to top, #0a2a1a, #4caf50);
+            border-radius: 4px; transform: translateX(-50%);
+        }
+        .leaf {
+            position: absolute;
+            background: linear-gradient(to right, #1b5e20, #2e7d32);
+            width: 60px; height: 12px; border-radius: 0 100% 0 100%;
+            box-shadow: inset 2px 2px 5px rgba(255,255,255,0.1);
+        }
+        .leaf.left { bottom: 30%; left: -55px; transform: rotate(-35deg); }
+        .leaf.right { bottom: 45%; right: -55px; transform: scaleX(-1) rotate(-35deg); }
+
+        .flower-head {
+            position: absolute; top: 0; left: 50%;
+            width: 0; height: 0; transform: translateX(-50%);
+            /* Ajuste del resplandor para que sea más naranja/rojizo, acorde al nuevo atardecer */
+            filter: drop-shadow(0 0 10px rgba(255, 150, 100, 0.4));
+        }
+
+        .petal {
+            position: absolute; bottom: 0; left: 50%; width: 35px; height: 90px;
+            border-radius: 50% 50% 10% 10%;
+            background: linear-gradient(to top, #c8e6c9 5%, #fff 30%, #fff 100%);
+            transform-origin: bottom center; box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        .p-center { height: 95px; z-index: 3; transform: translateX(-50%); }
+        .p-left   { transform: translateX(-50%) rotate(-45deg); z-index: 2; height: 85px; background: #f8f8ff; }
+        .p-right  { transform: translateX(-50%) rotate(45deg); z-index: 2; height: 85px; background: #f8f8ff; }
+        .p-back-l { transform: translateX(-50%) rotate(-75deg) scale(0.8); z-index: 1; filter: brightness(0.9); }
+        .p-back-r { transform: translateX(-50%) rotate(75deg) scale(0.8); z-index: 1; filter: brightness(0.9); }
+
+        .stamen-group { position: absolute; bottom: 5px; left: 50%; z-index: 4; transform: translateX(-50%); }
+        .stamen {
+            position: absolute; bottom: 0; left: 0; width: 2px; height: 60px;
+            background: #d4e157; transform-origin: bottom;
+        }
+        .stamen::after {
+            content: ''; position: absolute; top: -4px; left: -2px; width: 6px; height: 10px; background: #e65100; border-radius: 50%;
+        }
+        .s1 { transform: rotate(-15deg); } .s2 { transform: rotate(15deg); } .s3 { transform: rotate(0deg); height: 70px; }
+
+        /* --- TÍTULO Y SOBRE (SIN CAMBIOS) --- */
+        .title {
+            position: relative; z-index: 30; color: #fff;
+            font-family: 'Playfair Display', serif; font-size: clamp(2rem, 5vw, 3rem);
+            margin-bottom: 50px; text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            animation: fadeIn 2s ease-in-out forwards 0.5s; opacity: 0;
+        }
+
+        .envelope-container {
+            position: relative; z-index: 40; cursor: pointer;
+            animation: float 3s infinite ease-in-out; transition: transform 0.5s ease-in-out;
+        }
+        .envelope-container.open { animation: none; }
+
+        .envelope {
+            width: 320px; height: 220px; background: #e8d5b5;
+            position: relative; border-radius: 5px; box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        }
+
+        .letter-paper {
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+            width: 280px; height: 180px; background: #fffbf0; border-radius: 3px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 3; border: 2px solid #d4af37;
+            transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.4s;
+        }
+
+        .pocket {
+            position: absolute; bottom: 0; left: 0; width: 0; height: 0;
+            border-left: 160px solid #dcb887; border-right: 160px solid #d4af7a;
+            border-bottom: 110px solid #d4af7a; border-top: 110px solid transparent; z-index: 5;
+        }
+
+        .flap {
+            position: absolute; top: 0; left: 0; width: 0; height: 0;
+            border-left: 160px solid transparent; border-right: 160px solid transparent;
+            border-top: 120px solid #cda573; transform-origin: top; z-index: 10;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), z-index 0.1s 0.3s;
+        }
+
+        .wax-seal {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 55px; height: 55px; background: radial-gradient(circle at 30% 30%, #a62828, #7a1515);
+            border-radius: 50%; box-shadow: 0 3px 10px rgba(0,0,0,0.4); z-index: 11;
+            display: flex; justify-content: center; align-items: center; color: #e0c0a0;
+            font-family: 'Playfair Display', serif; font-size: 28px; border: 3px double rgba(255,255,255,0.2);
+            transition: opacity 0.3s 0.1s;
+        }
+
+        .envelope-container.open .flap { transform: rotateX(180deg); z-index: 1; }
+        .envelope-container.open .wax-seal { opacity: 0; }
+        .envelope-container.open .letter-paper { transform: translateX(-50%) translateY(-100px); }
+        .envelope-container.open { transform: translateY(30px); }
+
+        .click-text {
+            position: absolute; bottom: -60px; width: 100%; text-align: center; color: #ffddaa;
+            letter-spacing: 3px; font-size: 0.9rem; opacity: 0.8; animation: pulseText 2s infinite;
+            transition: opacity 0.5s;
+        }
+        .envelope-container.open + .click-text { opacity: 0; }
+
+        @keyframes sway { from { transform: rotate(2deg); } to { transform: rotate(-2deg); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        #fade-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; opacity: 0; pointer-events: none;
+            transition: opacity 1.5s ease-in-out; z-index: 100;
+        }
+
+        .firefly {
+            position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%;
+            box-shadow: 0 0 10px #fff, 0 0 20px #ffd700; animation: fly 15s linear infinite; opacity: 0; z-index: 6;
+        }
+        @keyframes fly {
+            0% { transform: translate(0,0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; }
+            100% { transform: translate(100vw, -50vh); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="garden-container"></div>
+    <div id="fireflies-container"></div>
+
+    <div class="title">Para Mabel</div>
+
+    <div class="envelope-container" id="envelopeBtn">
+        <div class="envelope">
+            <div class="letter-paper"></div>
+            <div class="flap"></div>
+            <div class="pocket"></div>
+            <div class="wax-seal">M</div>
+        </div>
+    </div>
+    <div class="click-text">DAME CLICK</div>
+
+    <div id="fade-overlay"></div>
+
+    <script>
+        // --- GENERAR JARDÍN CON POSICIONES FIJAS (SIN CAMBIOS) ---
+        const garden = document.getElementById('garden-container');
+
+        // LISTA MAESTRA DE POSICIONES FIJAS
+        const fixedLilies = [
+            // --- GRUPO CENTRAL ALTO ---
+            { l: 28, s: 1.3, b: 0, h: 300, z: 130 }, { l: 72, s: 1.3, b: 0, h: 310, z: 130 },
+            { l: 20, s: 1.2, b: 0, h: 280, z: 120 }, { l: 80, s: 1.2, b: 0, h: 290, z: 120 },
+            { l: 35, s: 1.1, b: 0, h: 250, z: 115 }, { l: 65, s: 1.1, b: 0, h: 260, z: 115 },
+            
+            // --- PRIMER PLANO ---
+            { l: 5,  s: 1.0, b: 0, h: 180, z: 110 }, { l: 95, s: 1.0, b: 0, h: 185, z: 110 },
+            { l: 15, s: 0.9, b: 0, h: 200, z: 105 }, { l: 85, s: 0.9, b: 0, h: 210, z: 105 },
+            { l: 45, s: 0.8, b: 0, h: 160, z: 100 }, { l: 55, s: 0.8, b: 0, h: 170, z: 100 },
+            { l: 2,  s: 0.9, b: 0, h: 150, z: 108 }, { l: 98, s: 0.9, b: 0, h: 155, z: 108 },
+
+            // --- MEDIO ---
+            { l: 10, s: 0.7, b: 1, h: 220, z: 90 }, { l: 90, s: 0.7, b: 1, h: 230, z: 90 },
+            { l: 25, s: 0.8, b: 1, h: 200, z: 95 }, { l: 75, s: 0.8, b: 1, h: 210, z: 95 },
+            { l: 40, s: 0.6, b: 1, h: 190, z: 85 }, { l: 60, s: 0.6, b: 1, h: 195, z: 85 },
+            { l: 8,  s: 0.7, b: 1, h: 180, z: 92 }, { l: 92, s: 0.7, b: 1, h: 185, z: 92 },
+            { l: 32, s: 0.7, b: 1, h: 210, z: 93 }, { l: 68, s: 0.7, b: 1, h: 215, z: 93 },
+
+            // --- FONDO ---
+            { l: 1,  s: 0.5, b: 3, h: 250, z: 50 }, { l: 99, s: 0.5, b: 3, h: 260, z: 50 },
+            { l: 12, s: 0.4, b: 3, h: 230, z: 55 }, { l: 88, s: 0.4, b: 3, h: 240, z: 55 },
+            { l: 22, s: 0.5, b: 2, h: 270, z: 60 }, { l: 78, s: 0.5, b: 2, h: 280, z: 60 },
+            { l: 38, s: 0.4, b: 3, h: 220, z: 52 }, { l: 62, s: 0.4, b: 3, h: 230, z: 52 },
+            { l: 48, s: 0.3, b: 4, h: 200, z: 40 }, { l: 52, s: 0.3, b: 4, h: 210, z: 40 },
+            { l: 18, s: 0.4, b: 3, h: 245, z: 58 }, { l: 82, s: 0.4, b: 3, h: 255, z: 58 },
+            { l: 6,  s: 0.5, b: 3, h: 235, z: 53 }, { l: 94, s: 0.5, b: 3, h: 245, z: 53 },
+            { l: 30, s: 0.4, b: 2, h: 260, z: 57 }, { l: 70, s: 0.4, b: 2, h: 270, z: 57 },
+            { l: 42, s: 0.3, b: 4, h: 210, z: 45 }, { l: 58, s: 0.3, b: 4, h: 220, z: 45 }
+        ];
+
+        function createFixedLily(config, index) {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('lily-wrapper');
+            
+            wrapper.style.left = config.l + '%';
+            wrapper.style.transform = `scale(${config.s})`;
+            wrapper.style.zIndex = config.z;
+            wrapper.style.height = config.h + 'px';
+            wrapper.style.bottom = (config.h * -0.1) + 'px';
+
+            if (config.b > 0) {
+                wrapper.style.filter = `blur(${config.b}px) brightness(${1 - config.b*0.15})`;
+            }
+
+            wrapper.style.animationDelay = -(index % 5) + 's'; 
+            wrapper.style.animationDuration = (4 + (index % 3)) + 's';
+
+            wrapper.innerHTML = `
+                <div class="stem"></div>
+                <div class="leaf left"></div> <div class="leaf right"></div>
+                <div class="flower-head">
+                    <div class="petal p-back-l"></div> <div class="petal p-back-r"></div>
+                    <div class="petal p-left"></div> <div class="petal p-right"></div>
+                    <div class="petal p-center"></div>
+                    <div class="stamen-group">
+                        <div class="stamen s1"></div> <div class="stamen s2"></div> <div class="stamen s3"></div>
+                    </div>
+                </div>
+            `;
+            return wrapper;
+        }
+
+        fixedLilies.forEach((config, index) => {
+            garden.appendChild(createFixedLily(config, index));
+        });
+
+        // --- LUCIÉRNAGAS (SIN CAMBIOS) ---
+        const firefliesContainer = document.getElementById('fireflies-container');
+        for(let i=0; i<30; i++) {
+            const fly = document.createElement('div');
+            fly.classList.add('firefly');
+            fly.style.left = Math.random() * 100 + 'vw';
+            fly.style.top = Math.random() * 90 + 'vh';
+            fly.style.animationDuration = (10 + Math.random() * 20) + 's';
+            fly.style.animationDelay = Math.random() * 5 + 's';
+            firefliesContainer.appendChild(fly);
+        }
+
+        // --- LÓGICA DEL SOBRE (SIN CAMBIOS) ---
+        const envelopeContainer = document.getElementById('envelopeBtn');
+        const fadeOverlay = document.getElementById('fade-overlay');
+        const clickText = document.querySelector('.click-text');
+        let isOpened = false;
+
+        envelopeContainer.addEventListener('click', () => {
+            if (isOpened) return;
+            isOpened = true;
+            envelopeContainer.classList.add('open');
+            clickText.style.opacity = 0;
+            setTimeout(() => {
+                fadeOverlay.style.opacity = 1;
+                setTimeout(() => { window.location.href = "pastel.html"; }, 1500);
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

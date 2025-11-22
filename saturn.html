@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para: Bel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=Playfair+Display:ital,wght@1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        /* --- CAPA DE INTERFAZ (UI) --- */
+        .ui-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #fff;
+            z-index: 10;
+            perspective: 1000px;
+            /* Hacemos un fade-in suave al cargar la página */
+            animation: fadeInPage 2s ease-in-out;
+        }
+
+        @keyframes fadeInPage {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 1. TÍTULO */
+        .main-title {
+            position: absolute;
+            width: 90%;
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 700;
+            font-style: italic;
+            text-shadow: 0 0 15px rgba(255, 220, 170, 0.6), 0 0 30px rgba(153, 51, 255, 0.4);
+            
+            top: 50%;
+            transform: translate(0, -50%);
+            opacity: 0;
+
+            animation: titleSequence 3.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            animation-delay: 0.5s; 
+        }
+
+        @keyframes titleSequence {
+            0% { opacity: 0; top: 50%; transform: translate(0, 20px); }
+            15% { opacity: 1; top: 50%; transform: translate(0, -50%); }
+            40% { opacity: 1; top: 50%; transform: translate(0, -50%); }
+            100% { opacity: 1; top: 10%; transform: translate(0, 0); }
+        }
+
+        /* 2. MENSAJE COMETA */
+        .message-comet-container {
+            position: absolute;
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            width: 85%;
+            max-width: 500px;
+            z-index: 20;
+        }
+
+        .message-body {
+            position: relative;
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            line-height: 1.6;
+            font-weight: 300;
+            background: rgba(20, 10, 30, 0.7);
+            padding: 40px 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 220, 170, 0.3);
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            pointer-events: auto;
+            
+            opacity: 0;
+            transform: translateZ(-1500px) translateX(300px) translateY(-300px) rotate(15deg);
+            filter: blur(20px);
+            transition: all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .message-arrived {
+            opacity: 1;
+            transform: translateZ(0) translateX(0) translateY(0) rotate(0deg);
+            filter: blur(0);
+            box-shadow: 0 0 60px rgba(255, 170, 50, 0.25), inset 0 0 30px rgba(153, 51, 255, 0.1);
+        }
+
+        .signature {
+            display: block;
+            margin-top: 25px;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.1em;
+            color: #ffddaa;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            padding: 0;
+            line-height: 1;
+        }
+        .close-btn:hover { color: #ff5500; }
+
+        /* 3. BOTÓN INICIAL */
+        .special-button {
+            pointer-events: auto;
+            position: absolute;
+            bottom: 12%;
+            padding: 12px 30px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 220, 170, 0.5);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            
+            opacity: 0;
+            animation: fadeInBtn 2s ease-in-out forwards 2.5s; 
+        }
+
+        .special-button:hover {
+            background: rgba(255, 220, 170, 0.2);
+            border-color: #ffddaa;
+            box-shadow: 0 0 25px rgba(255, 170, 50, 0.5);
+            transform: scale(1.05);
+        }
+
+        .button-hidden {
+            opacity: 0 !important;
+            transform: scale(0.5) translateY(50px);
+            pointer-events: none;
+        }
+
+        @keyframes fadeInBtn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        canvas { display: block; cursor: move; }
+    </style>
+</head>
+<body>
+
+    <div class="ui-container">
+        <h1 class="main-title">Bel, tu universo cumple 21 vueltas al sol</h1>
+        
+        <div class="message-comet-container">
+            <div class="message-body" id="cometMessage">
+                <button class="close-btn" id="closeBtn">×</button>
+                <p>
+                Bel, hoy completas tu vigésimo primer viaje alrededor del sol… 
+                y el universo luce un poco más hermoso por tu existencia.
+                <br><br>
+                Y aunque no te veo este día, sé que estas tan hermosa 
+                como siempre, con esa luz tuya que no necesita escenario para brillar.
+            </p>
+
+            <span class="signature">Feliz Cumpleaños para ti, de Maykol.</span>
+
+            <div class="pd-box">
+                <p>
+                    <strong>P.D.:</strong> puedes moverte por el espacio y ver las estrellas y particulas que están detrás.
+                </p>
+            </div>
+            </div>
+        </div>
+
+        <button class="special-button" id="openBtn">Abrir mensaje especial</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        const openBtn = document.getElementById('openBtn');
+        const cometMessage = document.getElementById('cometMessage');
+        const closeBtn = document.getElementById('closeBtn');
+        let targetRotationSpeed = 0.0005;
+
+        openBtn.addEventListener('click', () => {
+            openBtn.classList.add('button-hidden');
+            setTimeout(() => {
+                cometMessage.classList.add('message-arrived');
+                targetRotationSpeed = 0.002;
+            }, 100);
+        });
+
+        closeBtn.addEventListener('click', () => {
+            cometMessage.classList.remove('message-arrived');
+            setTimeout(() => {
+                openBtn.classList.remove('button-hidden');
+                targetRotationSpeed = 0.0005;
+            }, 800);
+        });
+
+        // --- 3D SETUP ---
+        function createCircleTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.3, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 64, 64);
+            return new THREE.Texture(canvas);
+        }
+        const circleTexture = createCircleTexture();
+        circleTexture.needsUpdate = true;
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.001);
+        
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        // CAMBIO: Posición de cámara más baja y alejada para la vista diagonal
+        camera.position.set(0, 1.5, 22); 
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; 
+        controls.rotateSpeed = 0.4;
+        controls.minDistance = 10;
+        controls.maxDistance = 40;
+
+        const saturnGroup = new THREE.Group();
+        scene.add(saturnGroup);
+
+        // Inclinación del planeta (se mantiene igual)
+        saturnGroup.rotation.x = 22 * Math.PI/180; 
+        saturnGroup.rotation.z = 8 * Math.PI/180;
+
+        const colorOrange = new THREE.Color(0xff5500); 
+        const colorPurple = new THREE.Color(0x9933ff);
+        const colorDeep = new THREE.Color(0x1a0033);
+
+        // 1. ESFERA
+        const sphereCount = 55000; 
+        const sphereGeo = new THREE.BufferGeometry();
+        const spherePos = new Float32Array(sphereCount * 3);
+        const sphereCol = new Float32Array(sphereCount * 3);
+        const sphereRadBase = 5.0;
+
+        for (let i = 0; i < sphereCount; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            const radius = sphereRadBase + (Math.random() - 0.5) * 0.3; 
+            spherePos[i*3] = radius * Math.sin(phi) * Math.cos(theta);
+            spherePos[i*3+1] = radius * Math.sin(phi) * Math.sin(theta);
+            spherePos[i*3+2] = radius * Math.cos(phi);
+
+            let distFromEquator = Math.abs(spherePos[i*3+1]) / radius;
+            let gradientFactor = Math.pow(distFromEquator, 0.7);
+            let finalColor = colorOrange.clone().lerp(colorDeep, gradientFactor);
+            sphereCol[i*3]=finalColor.r; sphereCol[i*3+1]=finalColor.g; sphereCol[i*3+2]=finalColor.b;
+        }
+        sphereGeo.setAttribute('position', new THREE.BufferAttribute(spherePos, 3));
+        sphereGeo.setAttribute('color', new THREE.BufferAttribute(sphereCol, 3));
+        const matSphere = new THREE.PointsMaterial({
+            size: 0.075, map: circleTexture, vertexColors: true,
+            transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false
+        });
+        saturnGroup.add(new THREE.Points(sphereGeo, matSphere));
+
+        // 2. NUBE
+        const cloudCount = 150000;
+        const cloudGeo = new THREE.BufferGeometry();
+        const cloudPos = new Float32Array(cloudCount * 3);
+        const cloudCol = new Float32Array(cloudCount * 3);
+        const startDistance = 5.1;
+        const maxSpreadDistance = 18.0;
+
+        for (let i = 0; i < cloudCount; i++) {
+            const ang = Math.random() * Math.PI * 2;
+            let distributionCurve = Math.pow(Math.random(), 1.8);
+            let distance = startDistance + distributionCurve * maxSpreadDistance;
+            let verticalThickness = distance * 0.2;
+            let ySpread = (Math.random() + Math.random() + Math.random() + Math.random() - 2) / 2; 
+            let y = ySpread * verticalThickness;
+
+            cloudPos[i*3] = distance * Math.cos(ang);
+            cloudPos[i*3+1] = y;
+            cloudPos[i*3+2] = distance * Math.sin(ang);
+
+            let fadeFactor = distributionCurve; 
+            let baseCloudColor = colorOrange.clone().lerp(colorPurple, fadeFactor * 0.8);
+            let finalCloudColor = baseCloudColor.lerp(colorDeep, fadeFactor * fadeFactor);
+            cloudCol[i*3] = finalCloudColor.r;
+            cloudCol[i*3+1] = finalCloudColor.g;
+            cloudCol[i*3+2] = finalCloudColor.b;
+        }
+        cloudGeo.setAttribute('position', new THREE.BufferAttribute(cloudPos, 3));
+        cloudGeo.setAttribute('color', new THREE.BufferAttribute(cloudCol, 3));
+        const matCloud = new THREE.PointsMaterial({
+            size: 0.08, map: circleTexture, vertexColors: true,
+            transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false
+        });
+        saturnGroup.add(new THREE.Points(cloudGeo, matCloud));
+
+        // 3. ESTRELLAS
+        const starCount = 5000;
+        const starGeo = new THREE.BufferGeometry();
+        const starPos = new Float32Array(starCount * 3);
+        for(let i=0; i<starCount*3; i++) starPos[i] = (Math.random() - 0.5) * 700;
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        const starMat = new THREE.PointsMaterial({
+            color: 0xffffff, size: 0.8, map: circleTexture,
+            transparent: true, opacity: 0.9, sizeAttenuation: true
+        });
+        scene.add(new THREE.Points(starGeo, starMat));
+
+        let currentRotationSpeed = 0.0005;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            currentRotationSpeed += (targetRotationSpeed - currentRotationSpeed) * 0.05;
+            saturnGroup.rotation.y += currentRotationSpeed;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

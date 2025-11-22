@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viajando... 🚀</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;700&family=Playfair+Display:ital,wght@1&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            font-family: 'Montserrat', sans-serif;
+            /* Fondo dinámico: Atardecer -> Espacio Profundo */
+            background: linear-gradient(to bottom, #2c1e38, #6a2c4a, #c13832, #e86a28, #ffb347);
+            animation: spaceShift 6s forwards ease-in-out 1s;
+        }
+
+        @keyframes spaceShift {
+            to { background: #000000; }
+        }
+
+        #scene-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        /* TEXTOS (Estilo Uniforme y Elegante) */
+        .status-text {
+            position: absolute; top: 15%; width: 100%; text-align: center;
+            color: #ffffff; /* Blanco uniforme */
+            font-family: 'Playfair Display', serif; font-style: italic;
+            font-size: 2rem; 
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.6); /* Resplandor suave */
+            z-index: 10; pointer-events: none;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        /* CORTINA FINAL */
+        #fade-out {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; opacity: 0; pointer-events: none; z-index: 100;
+            transition: opacity 1.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="status-text" id="statusMsg">Preparando motores...</div>
+    <div id="scene-container"></div>
+    <div id="fade-out"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // --- VARIABLES ---
+        const container = document.getElementById('scene-container');
+        const statusMsg = document.getElementById('statusMsg');
+        const fadeOut = document.getElementById('fade-out');
+        
+        // --- ESCENA 3D ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+        camera.position.set(0, 0, 25); // Cámara de frente
+
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        // --- LUCES ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffeebb, 1);
+        dirLight.position.set(5, 10, 10);
+        scene.add(dirLight);
+        // Luz del motor
+        const engineLight = new THREE.PointLight(0x00ffff, 2, 15);
+        scene.add(engineLight);
+
+        // --- COHETE 3D ---
+        const rocketGroup = new THREE.Group();
+        scene.add(rocketGroup);
+
+        // Materiales
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+        const redMat = new THREE.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.3 });
+        const windowMat = new THREE.MeshStandardMaterial({ color: 0x81d4fa, roughness: 0.1, metalness: 0.8 });
+
+        // Construcción del cohete
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 8, 32), bodyMat);
+        rocketGroup.add(body);
+
+        const nose = new THREE.Mesh(new THREE.ConeGeometry(2, 3, 32), redMat);
+        nose.position.y = 5.5;
+        rocketGroup.add(nose);
+
+        const win = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.5, 16), windowMat);
+        win.rotation.x = Math.PI / 2; win.position.z = 1.8; win.position.y = 2;
+        rocketGroup.add(win);
+        
+        const winRim = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.1, 8, 16), new THREE.MeshStandardMaterial({color: 0x555555}));
+        winRim.position.z = 2; winRim.position.y = 2;
+        rocketGroup.add(winRim);
+
+        for(let i=0; i<4; i++) {
+            const finGeo = new THREE.BoxGeometry(1.5, 3, 0.2);
+            const positionAttribute = finGeo.attributes.position;
+            positionAttribute.setY(0, 1.5); positionAttribute.setY(1, 1.5); 
+            const fin = new THREE.Mesh(finGeo, redMat);
+            const angle = (i / 4) * Math.PI * 2;
+            fin.position.x = Math.cos(angle) * 2.2;
+            fin.position.z = Math.sin(angle) * 2.2;
+            fin.position.y = -3;
+            fin.rotation.y = -angle + Math.PI/2;
+            rocketGroup.add(fin);
+        }
+
+        const fireGeo = new THREE.ConeGeometry(1.2, 6, 16);
+        const fire = new THREE.Mesh(fireGeo, new THREE.MeshBasicMaterial({color: 0xffaa00, transparent: true, opacity: 0.9}));
+        fire.rotation.x = Math.PI;
+        fire.position.y = -6;
+        rocketGroup.add(fire);
+
+        // Posición Inicial
+        rocketGroup.rotation.x = 0; 
+        rocketGroup.position.y = -15;
+
+        // --- SISTEMA DE PARTÍCULAS (Estrellas + Polvo Cósmico) ---
+        const starsGeo = new THREE.BufferGeometry();
+        const starsCount = 2000; // Aumentado para más inmersión
+        const posArray = new Float32Array(starsCount * 3);
+        const sizesArray = new Float32Array(starsCount);
+
+        for(let i=0; i<starsCount; i++) {
+            posArray[i*3] = (Math.random()-0.5) * 600; // X más amplio
+            posArray[i*3+1] = (Math.random()-0.5) * 600; // Y más amplio
+            posArray[i*3+2] = (Math.random()) * -800; // Z Profundidad
+            
+            // Variedad de tamaños para el "polvo"
+            sizesArray[i] = Math.random() * 0.5; 
+        }
+        
+        starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        starsGeo.setAttribute('size', new THREE.BufferAttribute(sizesArray, 1));
+
+        // Material especial para las partículas
+        const starMat = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 0.4,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+        
+        const starField = new THREE.Points(starsGeo, starMat);
+        scene.add(starField);
+
+
+        // --- ANIMACIÓN CINEMÁTICA ---
+        let time = 0;
+        let starSpeed = 0.2;
+        let phase = 'launch'; 
+
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+
+            // Efectos del motor
+            fire.scale.y = 1 + Math.sin(time * 20) * 0.2;
+            fire.material.color.setHSL(Math.random()*0.1, 1, 0.5);
+            engineLight.position.copy(rocketGroup.position);
+            engineLight.position.y -= 4;
+            engineLight.intensity = 1 + Math.random();
+
+            // --- SECUENCIA DE MOVIMIENTO ---
+            if (phase === 'launch') {
+                // 1. Subir
+                rocketGroup.position.y += 0.08;
+                rocketGroup.position.x = (Math.random() - 0.5) * 0.1; // Temblor leve
+
+                if (rocketGroup.position.y > 0) {
+                    phase = 'turn';
+                    // Cambio de texto suave
+                    statusMsg.style.opacity = 0;
+                    setTimeout(() => {
+                        statusMsg.innerText = "Preparando salto...";
+                        statusMsg.style.opacity = 1;
+                    }, 500);
+                }
+
+            } else if (phase === 'turn') {
+                // 2. Girar hacia el fondo
+                rocketGroup.rotation.x -= 0.015; 
+                rocketGroup.position.z -= 0.1;
+                rocketGroup.position.y += 0.02;
+
+                if (rocketGroup.rotation.x < -1.4) {
+                    phase = 'warp';
+                    // Texto final de viaje
+                    statusMsg.style.opacity = 0;
+                    setTimeout(() => {
+                        statusMsg.innerText = "¡SALTO HIPERESPACIAL!";
+                        statusMsg.style.opacity = 1;
+                    }, 500);
+                }
+
+            } else if (phase === 'warp') {
+                // 3. Viaje Rápido
+                rocketGroup.position.z -= 0.5; 
+                
+                // Acelerar partículas
+                starSpeed += 0.15; 
+                if(starSpeed > 20) starSpeed = 20;
+
+                // Temblor fuerte
+                rocketGroup.position.x = (Math.random() - 0.5) * 0.2;
+                rocketGroup.position.y += (Math.random() - 0.5) * 0.2;
+
+                // Cambio de texto final
+                if (rocketGroup.position.z < -50 && statusMsg.innerText !== "Dirigiendo a...") {
+                     statusMsg.innerText = "Dirigiendo a...";
+                }
+
+                // Terminar
+                if (rocketGroup.position.z < -150) {
+                    fadeOut.style.opacity = 1;
+                    setTimeout(() => { window.location.href = "saturn.html"; }, 1500);
+                }
+            }
+
+            // --- MOVER ESTRELLAS ---
+            const positions = starField.geometry.attributes.position.array;
+            for(let i=2; i<starsCount*3; i+=3) {
+                positions[i] += starSpeed; // Mover hacia la cámara
+                
+                // Efecto túnel: Si pasa la cámara, reiniciar al fondo
+                if(positions[i] > 20) {
+                    positions[i] = -800; 
+                    // Re-posicionar X e Y para variedad
+                    positions[i-2] = (Math.random()-0.5) * 600;
+                    positions[i-1] = (Math.random()-0.5) * 600;
+                }
+            }
+            starField.geometry.attributes.position.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

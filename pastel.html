@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Bel ✨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=Playfair+Display:ital,wght@1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            /* Fondo oscuro elegante */
+            background: radial-gradient(circle at center, #2b1810 0%, #000000 100%);
+            font-family: 'Montserrat', sans-serif;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* LIENZO 3D */
+        #drawingCanvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 5;
+            outline: none;
+            transition: opacity 2s ease-in-out;
+        }
+
+        /* INSTRUCCIONES */
+        .instruction {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 10%;
+            color: #ffddaa;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            letter-spacing: 2px;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 0 0 15px rgba(255, 200, 100, 0.6);
+            transition: opacity 2s ease-in-out;
+            animation: pulseText 3s infinite ease-in-out;
+        }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .counter {
+            position: absolute;
+            bottom: 15%;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+            pointer-events: none;
+            transition: opacity 2s ease-in-out;
+        }
+
+        /* CARTA MÁGICA / MENSAJE FINAL */
+        #letter-container {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0;
+            width: 80%;
+            max-width: 600px;
+            padding: 40px;
+            text-align: center;
+            background-color: #fffbf0;
+            border: 2px solid #d4af37;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            border-radius: 10px;
+            z-index: 50;
+            pointer-events: none;
+            transition: all 2.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        #letter-container.visible {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #letter-container h1 {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: #2b1810;
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            margin: 0;
+        }
+
+        /* CORTINA NEGRA */
+        #fade-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; opacity: 0; pointer-events: none;
+            transition: opacity 3s ease-in-out;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="instruction" id="instructionText">Toca para encender sus velas</div>
+    <div class="counter" id="counterText">0 / 21</div>
+    
+    <canvas id="drawingCanvas"></canvas>
+
+    <div id="letter-container">
+        <h1>Hay una sorpresa esperando por ti...</h1>
+    </div>
+
+    <div id="fade-overlay"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        // REFERENCIAS
+        const canvasElement = document.getElementById('drawingCanvas');
+        const instructionText = document.getElementById('instructionText');
+        const counterText = document.getElementById('counterText');
+        const letterContainer = document.getElementById('letter-container');
+        const fadeOverlay = document.getElementById('fade-overlay');
+
+        // --- CONFIGURACIÓN 3D ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x2b1810, 0.025);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 14, 26);
+        camera.lookAt(0, 2, 0);
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvasElement, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true; 
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        // --- LUCES ---
+        const ambientLight = new THREE.AmbientLight(0xffccaa, 0.7);
+        scene.add(ambientLight);
+        const mainLight = new THREE.PointLight(0xffdcb4, 0.8, 60);
+        mainLight.position.set(8, 15, 10);
+        mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 1024;
+        mainLight.shadow.mapSize.height = 1024;
+        scene.add(mainLight);
+        const fillLight = new THREE.PointLight(0xffaa88, 0.3, 40);
+        fillLight.position.set(-8, 5, -10);
+        scene.add(fillLight);
+
+        const cakeGroup = new THREE.Group();
+        scene.add(cakeGroup);
+
+        // --- MATERIALES ---
+        const cakeMat = new THREE.MeshStandardMaterial({ color: 0xcd5700, roughness: 0.8 });
+        const frostingMat = new THREE.MeshStandardMaterial({ color: 0xfff8dc, roughness: 0.5, metalness: 0.05 });
+        const tableMat = new THREE.MeshStandardMaterial({ color: 0x2a1a15, roughness: 0.8, metalness: 0.1 }); // Madera oscura
+
+        // --- GEOMETRÍA ---
+        function createWavyFrosting(radius, height, waveCount, waveDepth) {
+            const geo = new THREE.CylinderGeometry(radius, radius, height, 128, 1, true);
+            const pos = geo.attributes.position;
+            const v = new THREE.Vector3();
+            for (let i = 0; i < pos.count; i++) {
+                v.fromBufferAttribute(pos, i);
+                if (v.y < 0) {
+                    const angle = Math.atan2(v.z, v.x);
+                    const wave = Math.sin(angle * waveCount);
+                    v.y += Math.abs(wave) * waveDepth;
+                }
+                pos.setXYZ(i, v.x, v.y, v.z);
+            }
+            geo.computeVertexNormals();
+            return geo;
+        }
+
+        // --- CONSTRUCCIÓN DEL ESCENARIO ---
+
+        // 1. LA MESA (Ahora más pequeña)
+        // Reducido el radio de 18 a 9 para que sea un pedestal ajustado
+        const table = new THREE.Mesh(new THREE.CylinderGeometry(9, 9, 1, 64), tableMat);
+        table.position.y = -1.5; 
+        table.receiveShadow = true;
+        cakeGroup.add(table);
+
+        // Base del pastel (Plato)
+        const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 6.5, 0.2, 64), frostingMat);
+        basePlate.position.y = -0.9;
+        basePlate.receiveShadow = true;
+        cakeGroup.add(basePlate);
+
+        // PISO 1
+        const baseHeight = 3.5;
+        const baseRadius = 6;
+        const baseBody = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius, baseRadius, baseHeight, 64), cakeMat);
+        baseBody.position.y = -0.8 + baseHeight / 2;
+        baseBody.receiveShadow = true; baseBody.castShadow = true;
+        cakeGroup.add(baseBody);
+
+        const h1 = -0.8 + baseHeight;
+
+        const frostingHeight1 = 1.5;
+        const wavyGeo1 = createWavyFrosting(baseRadius + 0.15, frostingHeight1, 14, 0.5);
+        const wavySide1 = new THREE.Mesh(wavyGeo1, frostingMat);
+        wavySide1.position.y = h1 - (frostingHeight1 / 2) + 0.1;
+        wavySide1.receiveShadow = true;
+        cakeGroup.add(wavySide1);
+        
+        const topCap1 = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius + 0.15, baseRadius + 0.15, 0.1, 64), frostingMat);
+        topCap1.position.y = h1;
+        topCap1.receiveShadow = true;
+        cakeGroup.add(topCap1);
+
+        // PISO 2
+        const topHeight = 3;
+        const topRadius = 3.8;
+        const topStartY = h1 + 0.1;
+        const topBody = new THREE.Mesh(new THREE.CylinderGeometry(topRadius, topRadius, topHeight, 64), cakeMat);
+        topBody.position.y = topStartY + topHeight / 2;
+        topBody.castShadow = true;
+        cakeGroup.add(topBody);
+
+        const frostingHeight2 = 1.2;
+        const wavyGeo2 = createWavyFrosting(topRadius + 0.15, frostingHeight2, 10, 0.4);
+        const wavySide2 = new THREE.Mesh(wavyGeo2, frostingMat);
+        wavySide2.position.y = topStartY + topHeight - (frostingHeight2 / 2) + 0.1;
+        wavySide2.castShadow = true;
+        cakeGroup.add(wavySide2);
+        
+        const topCap2 = new THREE.Mesh(new THREE.CylinderGeometry(topRadius + 0.15, topRadius + 0.15, 0.1, 64), frostingMat);
+        topCap2.position.y = topStartY + topHeight;
+        topCap2.receiveShadow = true;
+        cakeGroup.add(topCap2);
+
+        // --- VELAS ---
+        const candles = [];
+        const flames = [];
+        const candleCount = 21;
+        const candlesBottomCount = 14;
+        const candlesTopCount = 7;
+
+        const candleGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.2, 16);
+        const candleMatStd = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+        const flameGeo = new THREE.SphereGeometry(0.18, 8, 8); 
+        const flameMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+
+        function createCandle(angle, radius, yHeight) {
+            const candle = new THREE.Mesh(candleGeo, candleMatStd);
+            candle.position.x = Math.cos(angle) * radius;
+            candle.position.z = Math.sin(angle) * radius;
+            candle.position.y = yHeight;
+            candle.castShadow = true;
+
+            const flame = new THREE.Mesh(flameGeo, flameMat);
+            flame.position.y = 0.7; 
+            flame.scale.set(0,0,0);
+            flame.visible = false;
+
+            const flameLight = new THREE.PointLight(0xff6600, 0, 4);
+            flameLight.position.y = 0.5;
+            flame.add(flameLight);
+
+            candle.add(flame);
+            cakeGroup.add(candle);
+            candles.push(candle);
+            flames.push({ mesh: flame, light: flameLight });
+        }
+
+        for(let i=0; i<candlesBottomCount; i++) {
+            const angle = (i / candlesBottomCount) * Math.PI * 2;
+            createCandle(angle, 5.2, h1 + 0.6); 
+        }
+        for(let i=0; i<candlesTopCount; i++) {
+            const angle = (i / candlesTopCount) * Math.PI * 2;
+            createCandle(angle, 2.8, topStartY + topHeight + 0.6); 
+        }
+
+        // --- LÓGICA INTERACCIÓN ---
+        let candlesLit = 0;
+        let isFinished = false;
+
+        function igniteNext() {
+            if (candlesLit >= candleCount || isFinished) return;
+
+            const target = flames[candlesLit];
+            target.mesh.visible = true;
+            
+            let s = 0;
+            const grow = setInterval(() => {
+                s += 0.1;
+                if(s >= 1) { s=1; clearInterval(grow); }
+                target.mesh.scale.set(s, s*1.5, s);
+                target.light.intensity = 0.8 * s;
+            }, 20);
+
+            candlesLit++;
+            counterText.innerText = `${candlesLit} / 21`;
+
+            if (candlesLit === candleCount) {
+                isFinished = true;
+                
+                setTimeout(() => {
+                    instructionText.style.animation = 'none';
+                    instructionText.style.opacity = 0;
+                    counterText.style.opacity = 0;
+                    canvasElement.style.opacity = 0; 
+
+                    setTimeout(() => {
+                        letterContainer.classList.add('visible');
+                    }, 3500);
+
+                    setTimeout(() => {
+                        fadeOverlay.style.opacity = 1;
+                        setTimeout(() => {
+                            // REDIRECCIÓN AL COHETE
+                            window.location.href = "cohete.html";
+                        }, 3000);
+                    }, 8500); 
+                }, 1500);
+            }
+        }
+
+        window.addEventListener('click', igniteNext);
+        window.addEventListener('touchstart', (e) => { e.preventDefault(); igniteNext(); }, { passive: false });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            cakeGroup.rotation.y += 0.004;
+
+            const time = Date.now() * 0.005;
+            flames.forEach((f, i) => {
+                if(f.mesh.visible) {
+                    const flicker = 0.9 + Math.sin(time * 2 + i) * 0.1 + Math.random() * 0.05;
+                    f.mesh.scale.y = flicker * 1.5;
+                    f.light.intensity = flicker * 0.8;
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>
